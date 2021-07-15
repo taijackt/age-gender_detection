@@ -8,5 +8,5 @@
 - onnxruntime
 
 ### How to run:
-- Open the python file `demo.py`, go to `line 214`, change the parameter `source` to either rtsp protocol or -1 for webcam
+- Open the python file `demo.py`, go to `line 215`, change the parameter `source` to either rtsp protocol or -1 for webcam
 - Activate youe environment and run `python demo.py` on your terminal.
