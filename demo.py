@@ -211,8 +211,8 @@ class age_gender_detector():
                 break
 
 if __name__ == "__main__":
-    engine = age_gender_detector(source="rtsp://root:pass@192.168.1.95/axis-media/media.amp?resolution=1280x720")
-    #engine = age_gender_detector(source=-1)
+    #engine = age_gender_detector(source="rtsp://root:pass@192.168.1.95/axis-media/media.amp?resolution=1280x720")
+    engine = age_gender_detector(source=-1)
     time.sleep(3)
     engine.run()
 
