@@ -15,7 +15,7 @@ from PIL import Image
 from utils.utils import non_max_suppression as nms
 import time
 from collections import deque
-from queue import Queue, LifoQueue
+from queue import LifoQueue
 import multiprocessing as mp
 from skimage import io
 import threading
@@ -50,7 +50,7 @@ class age_gender_detector():
         #self.test_img  = cv2.imread("/home/apptech/Desktop/")
 
         self.fps_queue = deque(maxlen=10)
-        self.frame_queue = Queue(maxsize=10)
+        self.frame_queue = LifoQueue(maxsize=10)
         
         self.cap = cv2.VideoCapture(source)
         self.cap.set(cv2.CAP_PROP_BUFFERSIZE, 3)
@@ -61,13 +61,13 @@ class age_gender_detector():
 
         self.getImageProcess = threading.Thread(target=self.get_image)
         self.getImageProcess.start()
-
     
     def get_image(self):
         while True:
             ret, frame = self.cap.read()
-            if ret: 
-                cv2.imwrite("./images/test.jpg",frame)
+            if ret:
+                print("frame putted")
+                self.frame_queue.put(frame)
             else:
                 continue;
 
@@ -98,7 +98,7 @@ class age_gender_detector():
         
     def preprocessingForDetection(self, img):
         img = self.colorEqualize(img)
-        img = Image.fromarray(img)
+        img = Image.fromarray(cv2.cvtColor(img, cv2.COLOR_BGR2RGB))
         #img = transforms.Resize((1080,1920))(img)
         img = transforms.ToTensor()(img)
         img = img.unsqueeze(0)
@@ -175,10 +175,12 @@ class age_gender_detector():
             
     def run(self):
         while True:
-            try:
-                frame = io.imread("./images/test.jpg")
-            except:
-                continue
+          
+            print('Get frame')
+            frame= self.frame_queue.get()
+            with self.frame_queue.mutex:
+                self.frame_queue.queue.clear()
+    
             
             # count time
             start = time.time()
@@ -199,7 +201,7 @@ class age_gender_detector():
                 result = self.classify_face(det,frame)
                 self.drawBoxes(result, frame)
 
-            display_frame = cv2.cvtColor(frame, cv2.COLOR_RGB2BGR)
+            display_frame = frame;
             fps = 1/ (time.time()-start)
             self.fps_queue.append(fps)
             cv2.putText(display_frame, "FPS:"+str(np.mean(self.fps_queue))[:4], (10, 40), cv2.FONT_HERSHEY_SIMPLEX,1, (0, 255, 0), 2, cv2.LINE_AA)
@@ -211,9 +213,7 @@ class age_gender_detector():
                 break
 
 if __name__ == "__main__":
-    #engine = age_gender_detector(source="rtsp://root:pass@192.168.1.95/axis-media/media.amp?resolution=1280x720")
-    engine = age_gender_detector(source=-1)
+    engine = age_gender_detector(source="rtsp://root:pass@192.168.1.95/axis-media/media.amp?resolution=1280x720")
+    #engine = age_gender_detector(source=-1)
     time.sleep(3)
     engine.run()
-
-
